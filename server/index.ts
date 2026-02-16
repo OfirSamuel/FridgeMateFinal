@@ -1,4 +1,4 @@
-import "./config/env"; 
+import "./config/env";
 import express from "express";
 import cors from "cors";
 import passport from "./middlewares/passport";
