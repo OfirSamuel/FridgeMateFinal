@@ -1,12 +1,12 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 
 // Initialize Gemini AI client
 if (!process.env.GEMINI_API_KEY) {
     throw new Error('GEMINI_API_KEY is not configured in environment variables');
 }
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const MODEL_NAME = 'gemini-2.0-flash-exp';
 
 interface RecipeGenerationRequest {
     ingredients: string[];
@@ -42,19 +42,16 @@ export const AIService = {
         const prompt = buildRecipePrompt(ingredients, allergies, dietPreference, count);
 
         try {
-            const result = await model.generateContent({
-                contents: [{
-                    role: 'user',
-                    parts: [{ text: prompt }]
-                }],
-                generationConfig: {
+            const response = await ai.models.generateContent({
+                model: MODEL_NAME,
+                contents: prompt,
+                config: {
                     temperature: 0.7,
                     maxOutputTokens: 8192,
                 }
             });
 
-            const response = result.response;
-            const textContent = response.text();
+            const textContent = response.text;
             
             if (!textContent) {
                 throw new Error('No response from AI');
@@ -103,19 +100,16 @@ export const AIService = {
         prompt += `Provide a helpful, concise answer. If they ask about substitutions, variations, or modifications, give specific suggestions.`;
 
         try {
-            const result = await model.generateContent({
-                contents: [{
-                    role: 'user',
-                    parts: [{ text: prompt }]
-                }],
-                generationConfig: {
+            const response = await ai.models.generateContent({
+                model: MODEL_NAME,
+                contents: prompt,
+                config: {
                     temperature: 0.7,
                     maxOutputTokens: 1024,
                 }
             });
 
-            const response = result.response;
-            const textContent = response.text();
+            const textContent = response.text;
             return textContent || 'Unable to process your request.';
         } catch (error: any) {
             // Handle rate limiting errors

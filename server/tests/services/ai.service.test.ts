@@ -1,12 +1,11 @@
-// Mock the Google Generative AI SDK before importing the service
+// Mock the Google GenAI SDK before importing the service
 const mockGenerateContent = jest.fn();
-const mockGetGenerativeModel = jest.fn(() => ({
-    generateContent: mockGenerateContent
-}));
 
-jest.mock('@google/generative-ai', () => ({
-    GoogleGenerativeAI: jest.fn().mockImplementation(() => ({
-        getGenerativeModel: mockGetGenerativeModel
+jest.mock('@google/genai', () => ({
+    GoogleGenAI: jest.fn().mockImplementation(() => ({
+        models: {
+            generateContent: mockGenerateContent
+        }
     }))
 }));
 
@@ -27,28 +26,26 @@ describe('AIService Tests', () => {
 
     describe('generateRecipes', () => {
         const mockRecipeResponse = {
-            response: {
-                text: () => JSON.stringify([
-                    {
-                        title: "Scrambled Eggs",
-                        description: "Simple scrambled eggs",
-                        cookingTime: "10 minutes",
-                        difficulty: "Easy",
-                        ingredients: [{ name: "eggs", amount: "3" }],
-                        steps: ["Crack eggs", "Cook"],
-                        nutrition: { calories: "200 kcal" }
-                    },
-                    {
-                        title: "Cheese Toast",
-                        description: "Toasted bread with cheese",
-                        cookingTime: "5 minutes",
-                        difficulty: "Easy",
-                        ingredients: [{ name: "bread", amount: "2 slices" }],
-                        steps: ["Toast bread", "Add cheese"],
-                        nutrition: { calories: "250 kcal" }
-                    }
-                ])
-            }
+            text: JSON.stringify([
+                {
+                    title: "Scrambled Eggs",
+                    description: "Simple scrambled eggs",
+                    cookingTime: "10 minutes",
+                    difficulty: "Easy",
+                    ingredients: [{ name: "eggs", amount: "3" }],
+                    steps: ["Crack eggs", "Cook"],
+                    nutrition: { calories: "200 kcal" }
+                },
+                {
+                    title: "Cheese Toast",
+                    description: "Toasted bread with cheese",
+                    cookingTime: "5 minutes",
+                    difficulty: "Easy",
+                    ingredients: [{ name: "bread", amount: "2 slices" }],
+                    steps: ["Toast bread", "Add cheese"],
+                    nutrition: { calories: "250 kcal" }
+                }
+            ])
         };
 
         it('should generate recipes from ingredients', async () => {
@@ -74,7 +71,7 @@ describe('AIService Tests', () => {
 
             const callArgs = mockGenerateContent.mock.calls[0];
             const requestBody = callArgs[0] as any;
-            const prompt = requestBody.contents[0].parts[0].text;
+            const prompt = requestBody.contents;
             
             expect(prompt).toContain('peanuts');
             expect(prompt).toContain('shellfish');
@@ -91,7 +88,7 @@ describe('AIService Tests', () => {
 
             const callArgs = mockGenerateContent.mock.calls[0];
             const requestBody = callArgs[0] as any;
-            const prompt = requestBody.contents[0].parts[0].text;
+            const prompt = requestBody.contents;
             
             expect(prompt).toContain('VEGAN');
             expect(prompt).toContain('vegan recipes');
@@ -109,7 +106,7 @@ describe('AIService Tests', () => {
 
         it('should handle empty AI response', async () => {
             mockGenerateContent.mockResolvedValueOnce({
-                response: { text: () => '' }
+                text: ''
             });
 
             await expect(AIService.generateRecipes({
@@ -119,9 +116,7 @@ describe('AIService Tests', () => {
 
         it('should handle markdown code blocks in response', async () => {
             const responseWithMarkdown = {
-                response: {
-                    text: () => '```json\n[{"title": "Test", "description": "Test", "cookingTime": "10 min", "difficulty": "Easy", "ingredients": [], "steps": []}]\n```'
-                }
+                text: '```json\n[{"title": "Test", "description": "Test", "cookingTime": "10 min", "difficulty": "Easy", "ingredients": [], "steps": []}]\n```'
             };
             mockGenerateContent.mockResolvedValueOnce(responseWithMarkdown);
 
@@ -142,16 +137,14 @@ describe('AIService Tests', () => {
 
             const callArgs = mockGenerateContent.mock.calls[0];
             const requestBody = callArgs[0] as any;
-            const prompt = requestBody.contents[0].parts[0].text;
+            const prompt = requestBody.contents;
             
             expect(prompt).toContain('exactly 3 recipes');
         });
 
         it('should handle malformed JSON response', async () => {
             mockGenerateContent.mockResolvedValueOnce({
-                response: {
-                    text: () => 'This is not valid JSON'
-                }
+                text: 'This is not valid JSON'
             });
 
             await expect(AIService.generateRecipes({
@@ -162,9 +155,7 @@ describe('AIService Tests', () => {
 
     describe('askAboutRecipe', () => {
         const mockAskResponse = {
-            response: {
-                text: () => "With eggs and cheese, you can make an omelette!"
-            }
+            text: "With eggs and cheese, you can make an omelette!"
         };
 
         it('should answer a cooking question', async () => {
@@ -193,7 +184,7 @@ describe('AIService Tests', () => {
 
             const callArgs = mockGenerateContent.mock.calls[0];
             const requestBody = callArgs[0] as any;
-            const prompt = requestBody.contents[0].parts[0].text;
+            const prompt = requestBody.contents;
             
             expect(prompt).toContain('Cheese Omelette');
             expect(prompt).toContain('eggs');
@@ -211,7 +202,7 @@ describe('AIService Tests', () => {
 
             const callArgs = mockGenerateContent.mock.calls[0];
             const requestBody = callArgs[0] as any;
-            const prompt = requestBody.contents[0].parts[0].text;
+            const prompt = requestBody.contents;
             
             expect(prompt).toContain('eggs');
             expect(prompt).toContain('milk');
@@ -232,7 +223,7 @@ describe('AIService Tests', () => {
 
         it('should return fallback message on empty response', async () => {
             mockGenerateContent.mockResolvedValueOnce({
-                response: { text: () => '' }
+                text: ''
             });
 
             const result = await AIService.askAboutRecipe(
