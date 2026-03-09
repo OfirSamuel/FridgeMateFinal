@@ -336,13 +336,6 @@
         ],
         "summary": "List user's chats",
         "description": "Returns all chats for the authenticated user, sorted by most recent activity",
-    "/ai/recipes/generate": {
-      "post": {
-        "tags": [
-          "AI"
-        ],
-        "summary": "Generate recipes using AI",
-        "description": "Generate personalized recipes based on available ingredients, allergies, and dietary preferences",
         "security": [
           {
             "bearerAuth": []
@@ -357,6 +350,22 @@
           },
           "401": {
             "description": "Not authorized"
+          }
+        }
+      }
+    },
+    "/ai/recipes/generate": {
+      "post": {
+        "tags": [
+          "AI"
+        ],
+        "summary": "Generate recipes using AI",
+        "description": "Generate personalized recipes based on available ingredients, allergies, and dietary preferences",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "in": "body",
@@ -779,6 +788,20 @@
           "type": "string"
         },
         "participants": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/UserProfile"
+          }
+        },
+        "lastMessage": {
+          "type": "string"
+        },
+        "lastUpdated": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
     "GenerateRecipesRequest": {
       "type": "object",
       "required": [
@@ -958,6 +981,7 @@
         "messageCount": {
           "type": "integer",
           "example": 5
+        },
         "ingredients": {
           "type": "array",
           "items": {
@@ -1140,4 +1164,4 @@
       "description": "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\""
     }
   }
-}
+}}
