@@ -175,8 +175,6 @@ function parseRecipeResponse(text: string): GeneratedRecipe[] {
         
         cleanedText = cleanedText.trim();
         
-        console.log('Attempting to parse:', cleanedText.substring(0, 200) + '...');
-        
         const recipes = JSON.parse(cleanedText);
         
         if (!Array.isArray(recipes)) {

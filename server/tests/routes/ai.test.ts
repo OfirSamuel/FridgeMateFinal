@@ -1,18 +1,19 @@
 import request from 'supertest';
-import app from '../../index';
 import { token } from '../setup';
 
-// Mock the Google Generative AI SDK
+// Mock the Google GenAI SDK
 const mockGenerateContent = jest.fn();
-const mockGetGenerativeModel = jest.fn(() => ({
-    generateContent: mockGenerateContent
-}));
 
-jest.mock('@google/generative-ai', () => ({
-    GoogleGenerativeAI: jest.fn().mockImplementation(() => ({
-        getGenerativeModel: mockGetGenerativeModel
+jest.mock('@google/genai', () => ({
+    GoogleGenAI: jest.fn().mockImplementation(() => ({
+        models: {
+            generateContent: mockGenerateContent
+        }
     }))
 }));
+
+// Import app after mocking to ensure mock is ready (and avoid TDZ during module eval)
+const app = require('../../index').default;
 
 describe('AI Controller Tests', () => {
     beforeEach(() => {
@@ -21,22 +22,20 @@ describe('AI Controller Tests', () => {
 
     describe('POST /ai/recipes/generate', () => {
         const mockGeminiResponse = {
-            response: {
-                text: () => JSON.stringify([
-                    {
-                        title: "Test Recipe",
-                        description: "A test recipe",
-                        cookingTime: "30 minutes",
-                        difficulty: "Easy",
-                        ingredients: [
-                            { name: "eggs", amount: "2" },
-                            { name: "cheese", amount: "100g" }
-                        ],
-                        steps: ["Step 1", "Step 2"],
-                        nutrition: { calories: "300 kcal" }
-                    }
-                ])
-            }
+            text: JSON.stringify([
+                {
+                    title: "Test Recipe",
+                    description: "A test recipe",
+                    cookingTime: "30 minutes",
+                    difficulty: "Easy",
+                    ingredients: [
+                        { name: "eggs", amount: "2" },
+                        { name: "cheese", amount: "100g" }
+                    ],
+                    steps: ["Step 1", "Step 2"],
+                    nutrition: { calories: "300 kcal" }
+                }
+            ])
         };
 
         it('should generate recipes successfully', async () => {
@@ -74,8 +73,8 @@ describe('AI Controller Tests', () => {
             expect(mockGenerateContent).toHaveBeenCalled();
             const callArgs = mockGenerateContent.mock.calls[0];
             const requestBody = callArgs[0] as any;
-            expect(requestBody.contents[0].parts[0].text).toContain('peanuts');
-            expect(requestBody.contents[0].parts[0].text).toContain('VEGETARIAN');
+            expect(requestBody.contents).toContain('peanuts');
+            expect(requestBody.contents).toContain('VEGETARIAN');
         });
 
         it('should return 400 if ingredients is missing', async () => {
@@ -135,9 +134,7 @@ describe('AI Controller Tests', () => {
 
     describe('POST /ai/ask', () => {
         const mockAskResponse = {
-            response: {
-                text: () => "You can make a delicious omelette with eggs and cheese!"
-            }
+            text: "You can make a delicious omelette with eggs and cheese!"
         };
 
         it('should answer a cooking question successfully', async () => {
@@ -201,6 +198,19 @@ describe('AI Controller Tests', () => {
 
             expect(res.statusCode).toBe(400);
             expect(res.text).toContain('rate limit');
+        });
+
+        it('should return 400 if ingredients is invalid', async () => {
+            const res = await request(app)
+                .post('/ai/ask')
+                .set('Authorization', token)
+                .send({
+                    query: 'What can I cook?',
+                    ingredients: 'not-an-array'
+                });
+
+            expect(res.statusCode).toBe(400);
+            expect(res.body.error).toContain('ingredients must be an array');
         });
     });
 });
