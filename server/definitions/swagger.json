@@ -21,15 +21,11 @@
   ],
   "host": "localhost:3001",
   "basePath": "/",
-  "schemes": [
-    "http"
-  ],
+  "schemes": ["http"],
   "paths": {
     "/health": {
       "get": {
-        "tags": [
-          "Health"
-        ],
+        "tags": ["Health"],
         "summary": "Health check",
         "description": "Check if the server is running",
         "responses": {
@@ -44,9 +40,7 @@
     },
     "/auth/register": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "summary": "Register a new user",
         "description": "This endpoint registers a new user with username, email and password",
         "parameters": [
@@ -78,9 +72,7 @@
     },
     "/auth/login": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "summary": "Log in a user",
         "description": "This endpoint logs in a user and returns access and refresh tokens",
         "parameters": [
@@ -112,9 +104,7 @@
     },
     "/auth/logout": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "summary": "Log out a user",
         "description": "Logs out the authenticated user and invalidates their refresh token, user is identified from the access token.",
         "parameters": [],
@@ -141,9 +131,7 @@
     },
     "/auth/refresh-token": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "summary": "Refresh access token",
         "description": "This endpoint refreshes the access token using a valid refresh token",
         "parameters": [
@@ -175,9 +163,7 @@
     },
     "/auth/login/google": {
       "get": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "summary": "Login with Google",
         "description": "Redirects to Google OAuth login page",
         "responses": {
@@ -189,9 +175,7 @@
     },
     "/auth/login/google/callback": {
       "get": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "summary": "Google OAuth callback",
         "description": "Handles Google OAuth callback and redirects with tokens",
         "responses": {
@@ -206,9 +190,7 @@
     },
     "/health": {
       "get": {
-        "tags": [
-          "Health"
-        ],
+        "tags": ["Health"],
         "summary": "Health check",
         "description": "Check if the server is running",
         "responses": {
@@ -223,9 +205,7 @@
     },
     "/user": {
       "get": {
-        "tags": [
-          "User"
-        ],
+        "tags": ["User"],
         "summary": "Get all users",
         "description": "Returns a list of all users",
         "security": [
@@ -251,9 +231,7 @@
     },
     "/user/{id}": {
       "get": {
-        "tags": [
-          "User"
-        ],
+        "tags": ["User"],
         "summary": "Get user by ID",
         "description": "Returns user profile details",
         "security": [
@@ -286,9 +264,7 @@
         }
       },
       "put": {
-        "tags": [
-          "User"
-        ],
+        "tags": ["User"],
         "summary": "Update user profile",
         "description": "Update userName and profileImage (only for the logged-in user)",
         "security": [
@@ -331,18 +307,9 @@
     },
     "/chats": {
       "get": {
-        "tags": [
-          "Chat"
-        ],
+        "tags": ["Chat"],
         "summary": "List user's chats",
         "description": "Returns all chats for the authenticated user, sorted by most recent activity",
-    "/ai/recipes/generate": {
-      "post": {
-        "tags": [
-          "AI"
-        ],
-        "summary": "Generate recipes using AI",
-        "description": "Generate personalized recipes based on available ingredients, allergies, and dietary preferences",
         "security": [
           {
             "bearerAuth": []
@@ -357,6 +324,20 @@
           },
           "401": {
             "description": "Not authorized"
+          }
+        }
+      }
+    },
+    "/ai/recipes/generate": {
+      "post": {
+        "tags": ["AI"],
+        "summary": "Generate recipes using AI",
+        "description": "Generate personalized recipes based on available ingredients, allergies, and dietary preferences",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "in": "body",
@@ -388,9 +369,7 @@
     },
     "/ai/ask": {
       "post": {
-        "tags": [
-          "AI"
-        ],
+        "tags": ["AI"],
         "summary": "Ask AI about cooking",
         "description": "Free-form query to ask the AI about cooking, recipes, or ingredient usage. Can optionally include a recipe (inline or by ID) for context.",
         "security": [
@@ -432,9 +411,7 @@
     },
     "/recipes/save": {
       "post": {
-        "tags": [
-          "Recipes"
-        ],
+        "tags": ["Recipes"],
         "summary": "Save a recipe to favorites",
         "description": "Save a generated recipe to the user's favorites",
         "security": [
@@ -473,9 +450,7 @@
     },
     "/recipes/{id}": {
       "get": {
-        "tags": [
-          "Recipes"
-        ],
+        "tags": ["Recipes"],
         "summary": "Get a recipe by ID",
         "security": [
           {
@@ -509,9 +484,7 @@
     },
     "/user/me/recipes": {
       "get": {
-        "tags": [
-          "Recipes"
-        ],
+        "tags": ["Recipes"],
         "summary": "Get user's saved recipes",
         "description": "Get recipes saved by the authenticated user",
         "security": [
@@ -550,9 +523,7 @@
     },
     "/user/me/recipes/{id}": {
       "delete": {
-        "tags": [
-          "Recipes"
-        ],
+        "tags": ["Recipes"],
         "summary": "Remove a recipe from favorites",
         "security": [
           {
@@ -589,16 +560,176 @@
           }
         }
       }
+    },
+    "/fridges/{fridgeId}/items": {
+      "get": {
+        "tags": ["Inventory Items"],
+        "summary": "List inventory items in a fridge",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fridgeId",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "ownership",
+            "type": "string",
+            "enum": ["SHARED", "PRIVATE"],
+            "description": "Filter by ownership type"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "type": "integer",
+            "default": 1
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "type": "integer",
+            "default": 20
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of items",
+            "schema": { "$ref": "#/definitions/InventoryItemListResponse" }
+          },
+          "401": { "description": "Unauthorized" },
+          "404": { "description": "Fridge not found" }
+        }
+      },
+      "post": {
+        "tags": ["Inventory Items"],
+        "summary": "Create an inventory item",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fridgeId",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": { "$ref": "#/definitions/CreateInventoryItemRequest" }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Item created",
+            "schema": { "$ref": "#/definitions/InventoryItem" }
+          },
+          "400": { "description": "Validation error" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/fridges/{fridgeId}/items/{itemId}": {
+      "get": {
+        "tags": ["Inventory Items"],
+        "summary": "Get inventory item by ID",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fridgeId",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "name": "itemId",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Item details",
+            "schema": { "$ref": "#/definitions/InventoryItem" }
+          },
+          "401": { "description": "Unauthorized" },
+          "404": { "description": "Item not found" }
+        }
+      },
+      "patch": {
+        "tags": ["Inventory Items"],
+        "summary": "Update inventory item",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fridgeId",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "name": "itemId",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": { "$ref": "#/definitions/UpdateInventoryItemRequest" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Item updated",
+            "schema": { "$ref": "#/definitions/InventoryItem" }
+          },
+          "400": { "description": "Validation error" },
+          "401": { "description": "Unauthorized" },
+          "404": { "description": "Item not found" }
+        }
+      },
+      "delete": {
+        "tags": ["Inventory Items"],
+        "summary": "Delete inventory item",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fridgeId",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "name": "itemId",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Item deleted",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": { "type": "string", "example": "Item deleted" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "404": { "description": "Item not found" }
+        }
+      }
     }
   },
   "definitions": {
     "UserRegistration": {
       "type": "object",
-      "required": [
-        "userName",
-        "email",
-        "password"
-      ],
+      "required": ["userName", "email", "password"],
       "properties": {
         "userName": {
           "type": "string",
@@ -617,10 +748,7 @@
     },
     "UserLogin": {
       "type": "object",
-      "required": [
-        "email",
-        "password"
-      ],
+      "required": ["email", "password"],
       "properties": {
         "email": {
           "type": "string",
@@ -634,9 +762,7 @@
     },
     "RefreshToken": {
       "type": "object",
-      "required": [
-        "refreshToken"
-      ],
+      "required": ["refreshToken"],
       "properties": {
         "refreshToken": {
           "type": "string",
@@ -779,42 +905,41 @@
           "type": "string"
         },
         "participants": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/UserProfile"
+          }
+        },
+        "lastMessage": {
+          "type": "string"
+        },
+        "lastUpdated": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
     "GenerateRecipesRequest": {
       "type": "object",
-      "required": [
-        "ingredients"
-      ],
+      "required": ["ingredients"],
       "properties": {
         "ingredients": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "example": [
-            "eggs",
-            "tomatoes",
-            "cheese",
-            "bread"
-          ]
+          "example": ["eggs", "tomatoes", "cheese", "bread"]
         },
         "allergies": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "example": [
-            "peanuts",
-            "shellfish"
-          ]
+          "example": ["peanuts", "shellfish"]
         },
         "dietPreference": {
           "type": "string",
-          "enum": [
-            "NONE",
-            "VEGETARIAN",
-            "VEGAN",
-            "PESCATARIAN"
-          ],
+          "enum": ["NONE", "VEGETARIAN", "VEGAN", "PESCATARIAN"],
           "example": "VEGETARIAN"
         },
         "count": {
@@ -860,11 +985,7 @@
         },
         "difficulty": {
           "type": "string",
-          "enum": [
-            "Easy",
-            "Medium",
-            "Hard"
-          ]
+          "enum": ["Easy", "Medium", "Hard"]
         },
         "ingredients": {
           "type": "array",
@@ -878,266 +999,340 @@
                 "type": "string"
               },
               "profileImage": {
-              "name": {
-                "type": "string"
-              },
-              "amount": {
-                "type": "string"
+                "name": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "string"
+                }
               }
             }
-          }
-        },
-        "steps": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "nutrition": {
-          "type": "object",
-          "properties": {
-            "calories": {
-              "type": "string"
-            },
-            "protein": {
-              "type": "string"
-            },
-            "carbs": {
-              "type": "string"
-            },
-            "fat": {
-              "type": "string"
-            }
-          }
-        }
-      }
-    },
-    "AskAIRequest": {
-      "type": "object",
-      "required": [
-        "query"
-      ],
-      "properties": {
-        "query": {
-          "type": "string",
-          "example": "What can I make with eggs and cheese?"
-        },
-        "recipeId": {
-          "type": "string",
-          "description": "ID of a saved recipe to ask about (alternative to inline recipe)"
-        },
-        "recipe": {
-          "type": "object",
-          "description": "Inline recipe object for context",
-          "properties": {
-            "title": {
-              "type": "string"
-            },
-            "ingredients": {
-              "type": "array",
-              "items": {
-                "type": "object"
-              }
-            },
-            "steps": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        },
-        "lastMessage": {
-          "type": "string",
-          "example": "Let's make pasta!"
-        },
-        "lastUpdated": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "messageCount": {
-          "type": "integer",
-          "example": 5
-        "ingredients": {
-          "type": "array",
-          "items": {
-            "type": "string"
           },
-          "example": [
-            "eggs",
-            "cheese",
-            "milk"
-          ],
-          "description": "Available ingredients for context"
-        }
-      }
-    },
-    "AskAIResponse": {
-      "type": "object",
-      "properties": {
-        "query": {
-          "type": "string"
-        },
-        "answer": {
-          "type": "string"
-        },
-        "recipeContext": {
-          "type": "string",
-          "description": "Title of recipe used for context"
-        },
-        "ingredientsConsidered": {
-          "type": "integer"
-        }
-      }
-    },
-    "SaveRecipeRequest": {
-      "type": "object",
-      "required": [
-        "title"
-      ],
-      "properties": {
-        "title": {
-          "type": "string",
-          "example": "Cheese Omelette"
-        },
-        "description": {
-          "type": "string",
-          "example": "A fluffy cheese omelette"
-        },
-        "cookingTime": {
-          "type": "string",
-          "example": "15 minutes"
-        },
-        "difficulty": {
-          "type": "string",
-          "enum": [
-            "Easy",
-            "Medium",
-            "Hard"
-          ]
-        },
-        "ingredients": {
-          "type": "array",
-          "items": {
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "nutrition": {
             "type": "object",
             "properties": {
-              "name": {
+              "calories": {
                 "type": "string"
               },
-              "amount": {
+              "protein": {
+                "type": "string"
+              },
+              "carbs": {
+                "type": "string"
+              },
+              "fat": {
                 "type": "string"
               }
             }
           }
-        },
-        "steps": {
-          "type": "array",
-          "items": {
-            "type": "string"
+        }
+      },
+      "AskAIRequest": {
+        "type": "object",
+        "required": ["query"],
+        "properties": {
+          "query": {
+            "type": "string",
+            "example": "What can I make with eggs and cheese?"
+          },
+          "recipeId": {
+            "type": "string",
+            "description": "ID of a saved recipe to ask about (alternative to inline recipe)"
+          },
+          "recipe": {
+            "type": "object",
+            "description": "Inline recipe object for context",
+            "properties": {
+              "title": {
+                "type": "string"
+              },
+              "ingredients": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              },
+              "steps": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "lastMessage": {
+            "type": "string",
+            "example": "Let's make pasta!"
+          },
+          "lastUpdated": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "messageCount": {
+            "type": "integer",
+            "example": 5
+          },
+          "ingredients": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["eggs", "cheese", "milk"],
+            "description": "Available ingredients for context"
           }
-        },
-        "nutrition": {
-          "type": "object",
-          "properties": {
-            "calories": {
+        }
+      },
+      "AskAIResponse": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string"
+          },
+          "answer": {
+            "type": "string"
+          },
+          "recipeContext": {
+            "type": "string",
+            "description": "Title of recipe used for context"
+          },
+          "ingredientsConsidered": {
+            "type": "integer"
+          }
+        }
+      },
+      "SaveRecipeRequest": {
+        "type": "object",
+        "required": ["title"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Cheese Omelette"
+          },
+          "description": {
+            "type": "string",
+            "example": "A fluffy cheese omelette"
+          },
+          "cookingTime": {
+            "type": "string",
+            "example": "15 minutes"
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": ["Easy", "Medium", "Hard"]
+          },
+          "ingredients": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "steps": {
+            "type": "array",
+            "items": {
               "type": "string"
-            },
-            "protein": {
-              "type": "string"
-            },
-            "carbs": {
-              "type": "string"
-            },
-            "fat": {
-              "type": "string"
+            }
+          },
+          "nutrition": {
+            "type": "object",
+            "properties": {
+              "calories": {
+                "type": "string"
+              },
+              "protein": {
+                "type": "string"
+              },
+              "carbs": {
+                "type": "string"
+              },
+              "fat": {
+                "type": "string"
+              }
             }
           }
         }
-      }
-    },
-    "SaveRecipeResponse": {
-      "type": "object",
-      "properties": {
-        "message": {
-          "type": "string",
-          "example": "Recipe saved to favorites"
-        },
-        "recipe": {
-          "$ref": "#/definitions/SavedRecipe"
-        }
-      }
-    },
-    "SavedRecipe": {
-      "type": "object",
-      "properties": {
-        "_id": {
-          "type": "string"
-        },
-        "userId": {
-          "type": "string"
-        },
-        "title": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "cookingTime": {
-          "type": "string"
-        },
-        "difficulty": {
-          "type": "string"
-        },
-        "ingredients": {
-          "type": "array",
-          "items": {
-            "type": "object"
-          }
-        },
-        "steps": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "nutrition": {
-          "type": "object"
-        },
-        "createdAt": {
-          "type": "string"
-        },
-        "updatedAt": {
-          "type": "string"
-        }
-      }
-    },
-    "RecipeListResponse": {
-      "type": "object",
-      "properties": {
-        "items": {
-          "type": "array",
-          "items": {
+      },
+      "SaveRecipeResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Recipe saved to favorites"
+          },
+          "recipe": {
             "$ref": "#/definitions/SavedRecipe"
           }
-        },
-        "total": {
-          "type": "integer"
-        },
-        "page": {
-          "type": "integer"
-        },
-        "limit": {
-          "type": "integer"
+        }
+      },
+      "SavedRecipe": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "cookingTime": {
+            "type": "string"
+          },
+          "difficulty": {
+            "type": "string"
+          },
+          "ingredients": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "nutrition": {
+            "type": "object"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        }
+      },
+      "RecipeListResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/SavedRecipe"
+            }
+          },
+          "total": {
+            "type": "integer"
+          },
+          "page": {
+            "type": "integer"
+          },
+          "limit": {
+            "type": "integer"
+          }
+        }
+      },
+      "InventoryItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "fridgeId": {
+            "type": "string"
+          },
+          "ownerId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "string"
+          },
+          "ownership": {
+            "type": "string",
+            "enum": ["SHARED", "PRIVATE"]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateInventoryItemRequest": {
+        "type": "object",
+        "required": ["name", "quantity"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "string"
+          },
+          "ownership": {
+            "type": "string",
+            "enum": ["SHARED", "PRIVATE"],
+            "default": "PRIVATE"
+          }
+        }
+      },
+      "UpdateInventoryItemRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "string"
+          },
+          "ownership": {
+            "type": "string",
+            "enum": ["SHARED", "PRIVATE"]
+          }
+        }
+      },
+      "InventoryItemListResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/InventoryItem"
+            }
+          },
+          "total": {
+            "type": "integer"
+          },
+          "page": {
+            "type": "integer"
+          },
+          "limit": {
+            "type": "integer"
+          }
         }
       }
-    }
-  },
-  "securityDefinitions": {
-    "bearerAuth": {
-      "type": "apiKey",
-      "name": "Authorization",
-      "in": "header",
-      "description": "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\""
+    },
+    "securityDefinitions": {
+      "bearerAuth": {
+        "type": "apiKey",
+        "name": "Authorization",
+        "in": "header",
+        "description": "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\""
+      }
     }
   }
 }
