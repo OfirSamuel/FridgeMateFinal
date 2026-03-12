@@ -77,14 +77,13 @@ export class InventoryItemService {
 
     // Apply ownership filter if specified
     if (query.ownership) {
+      delete filter.$or;
       if (query.ownership === "PRIVATE") {
         // Only show user's own private items
-        filter.$or = undefined;
         filter.ownership = "PRIVATE";
         filter.ownerId = userObjectId;
       } else {
         // Show all shared items
-        filter.$or = undefined;
         filter.ownership = "SHARED";
       }
     }
