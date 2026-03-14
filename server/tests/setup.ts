@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import User, { IUser } from '../models/user.model';
 import bcrypt from "bcrypt";
+import { io, server } from '../index';
 
 dotenv.config();
 
@@ -74,6 +75,14 @@ afterAll(async () => {
         for (const key in collections) {
             await collections[key].deleteMany({});
         }
+        
+        await new Promise<void>((resolve, reject) => {
+             io.close(() => resolve());
+        });
+        await new Promise<void>((resolve, reject) => {
+             server.close(() => resolve());
+        });
+
         await mongoose.connection.close();
         console.log('Disconnected from the test database');
     } catch (error) {
