@@ -118,6 +118,55 @@ export const AIService = {
             }
             throw new Error(`AI service error: ${error.message}`);
         }
+    },
+
+    /**
+     * Checks if a specific item is considered "running low" based on quantity and household size.
+     */
+    async checkIfRunningLow(itemName: string, quantity: string, userCount: number): Promise<{ isRunningLow: boolean; reasoning: string }> {
+        const prompt = `
+You are a smart kitchen assistant. Determine if the following fridge item is running low for a household of ${userCount} people.
+
+Context:
+- Item Name: "${itemName}"
+- Current Quantity: "${quantity}"
+- Household Size: ${userCount} person(s)
+
+Task:
+- Analyze if this quantity is typically considered low/insufficient for this household size.
+- Respond with ONLY a JSON object.
+
+Format:
+{
+  "isRunningLow": true/false, // Boolean
+  "reasoning": "short explanation (max 15 words)"
+}
+`;
+
+        try {
+            const response = await ai.models.generateContent({
+                model: MODEL_NAME,
+                contents: prompt,
+                config: {
+                    temperature: 0.1,
+                    maxOutputTokens: 200,
+                    responseMimeType: "application/json"
+                }
+            });
+
+            const textContent = response.text;
+            if (!textContent) throw new Error('No response from AI');
+
+            const result = JSON.parse(textContent);
+            return {
+                isRunningLow: !!result.isRunningLow,
+                reasoning: result.reasoning || "AI assessment."
+            };
+        } catch (error: any) {
+            console.error('AI checkRunningLow error:', error);
+            // Default to false if AI fails
+            return { isRunningLow: false, reasoning: "Could not determine status." };
+        }
     }
 };
 

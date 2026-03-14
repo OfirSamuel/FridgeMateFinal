@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { ApiError } from "../utils/errors";
 import { InventoryItemModel } from "../models/inventory-item.model";
 import { FridgeModel } from "../models/fridge.model";
+import { AIService } from "./ai.service";
 import {
   CreateInventoryItemInput,
   UpdateInventoryItemInput,
@@ -37,7 +38,22 @@ export class InventoryItemService {
     userId: string,
     data: Omit<CreateInventoryItemInput, "fridgeId">
   ) {
+    // Verify membership and fetch fridge for member count
     await this.verifyFridgeMembership(fridgeId, userId);
+    
+    const fridge = await FridgeModel.findById(fridgeId);
+    if (!fridge) {
+        throw new ApiError(404, "Fridge not found", "FRIDGE_NOT_FOUND");
+    }
+
+    // AI Check for running low
+    let isRunningLow = false;
+    try {
+        const aiResult = await AIService.checkIfRunningLow(data.name, data.quantity, fridge.members.length);
+        isRunningLow = aiResult.isRunningLow;
+    } catch (err) {
+        console.warn("AI low stock check failed", err);
+    }
 
     const item = await InventoryItemModel.create({
       fridgeId: new mongoose.Types.ObjectId(fridgeId),
@@ -45,6 +61,7 @@ export class InventoryItemService {
       name: data.name,
       quantity: data.quantity,
       ownership: data.ownership ?? "PRIVATE",
+      isRunningLow,
     });
 
     return item.toObject();
@@ -145,6 +162,19 @@ export class InventoryItemService {
     if (data.name !== undefined) item.name = data.name;
     if (data.quantity !== undefined) item.quantity = data.quantity;
     if (data.ownership !== undefined) item.ownership = data.ownership;
+
+    // Re-check stock levels if name or quantity changed
+    if (data.name !== undefined || data.quantity !== undefined) {
+        try {
+            const fridge = await FridgeModel.findById(item.fridgeId);
+            if (fridge) {
+                const aiResult = await AIService.checkIfRunningLow(item.name, item.quantity, fridge.members.length);
+                item.isRunningLow = aiResult.isRunningLow;
+            }
+        } catch (err) {
+            console.warn("AI low stock re-check failed", err);
+        }
+    }
 
     await item.save();
     return item.toObject();
