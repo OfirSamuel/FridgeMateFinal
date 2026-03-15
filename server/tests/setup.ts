@@ -3,7 +3,10 @@ import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import User, { IUser } from '../models/user.model';
 import bcrypt from "bcrypt";
-import { io, server } from '../index';
+
+// Lazy load io and server to avoid early initialization
+let io: any;
+let server: any;
 
 dotenv.config();
 
@@ -28,6 +31,11 @@ beforeAll(async () => {
     }
 
     try {
+        // Load app/server here so that mocks in test files are applied first
+        const appIndex = require('../index');
+        io = appIndex.io;
+        server = appIndex.server;
+
         await mongoose.connect(testUri);
         console.log('Connected to the test database');
     } catch (error) {
