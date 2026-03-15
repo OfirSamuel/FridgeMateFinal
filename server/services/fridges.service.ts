@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { ApiError } from "../utils/errors";
 import { FridgeModel } from "../models/fridge.model";
 import { UserModel } from "../models/user.model";
+import { InventoryItemService } from "./inventory-item.service";
 
 function makeInviteCode() {
   const part = Math.random().toString(36).slice(2, 8).toUpperCase();
@@ -41,6 +42,11 @@ export class FridgesService {
     await fridge.save();
 
     await UserModel.findByIdAndUpdate(userId, { activeFridgeId: fridge._id });
+
+    // Trigger AI re-evaluation in background for shared items
+    InventoryItemService.recalculateSharedItemsStatus(fridge._id.toString(), fridge.members.length)
+        .catch(err => console.error("Background AI update failed for fridge join:", err));
+        
     return fridge;
   }
 
