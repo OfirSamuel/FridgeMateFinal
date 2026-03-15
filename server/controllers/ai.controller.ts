@@ -40,6 +40,12 @@ export const AIController = {
                 });
             }
 
+            if (ingredients && (!Array.isArray(ingredients) || ingredients.some((i: any) => typeof i !== 'string'))) {
+                return res.status(400).json({
+                    error: 'ingredients must be an array of strings'
+                });
+            }
+
             let recipeContext = recipe;
             if (recipeId && !recipe) {
                 const savedRecipe = await RecipeService.getById(recipeId);

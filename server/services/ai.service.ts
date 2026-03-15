@@ -1,4 +1,12 @@
-import axios from 'axios';
+import { GoogleGenAI } from '@google/genai';
+
+// Initialize Gemini AI client
+if (!process.env.GEMINI_API_KEY) {
+    throw new Error('GEMINI_API_KEY is not configured in environment variables');
+}
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const MODEL_NAME = 'gemini-2.5-flash';
 
 interface RecipeGenerationRequest {
     ingredients: string[];
@@ -31,30 +39,19 @@ export const AIService = {
     async generateRecipes(request: RecipeGenerationRequest): Promise<AIServiceResponse> {
         const { ingredients, allergies = [], dietPreference = 'NONE', count = 3 } = request;
 
-        if (!process.env.GEMINI_API_KEY) {
-            throw new Error('GEMINI_API_KEY is not configured');
-        }
-
         const prompt = buildRecipePrompt(ingredients, allergies, dietPreference, count);
 
         try {
-            const response = await axios.post(
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-                {
-                    contents: [{
-                        parts: [{ text: prompt }]
-                    }],
-                    generationConfig: {
-                        temperature: 0.7,
-                        maxOutputTokens: 8192,
-                    }
-                },
-                {
-                    headers: { 'Content-Type': 'application/json' }
+            const response = await ai.models.generateContent({
+                model: MODEL_NAME,
+                contents: prompt,
+                config: {
+                    temperature: 0.7,
+                    maxOutputTokens: 8192,
                 }
-            );
+            });
 
-            const textContent = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+            const textContent = response.text;
             
             if (!textContent) {
                 throw new Error('No response from AI');
@@ -67,7 +64,8 @@ export const AIService = {
                 rawResponse: textContent
             };
         } catch (error: any) {
-            if (error.response?.status === 429) {
+            // Handle rate limiting errors
+            if (error.message?.includes('429') || error.message?.includes('quota') || error.message?.includes('rate limit')) {
                 throw new Error('AI rate limit exceeded. Please try again later.');
             }
             throw new Error(`AI service error: ${error.message}`);
@@ -75,10 +73,6 @@ export const AIService = {
     },
 
     async askAboutRecipe(query: string, recipe?: { title: string; ingredients?: any[]; steps?: string[] }, availableIngredients: string[] = []): Promise<string> {
-        if (!process.env.GEMINI_API_KEY) {
-            throw new Error('GEMINI_API_KEY is not configured');
-        }
-
         let prompt = 'You are a helpful cooking assistant.\n\n';
 
         // Add recipe context if provided
@@ -106,29 +100,72 @@ export const AIService = {
         prompt += `Provide a helpful, concise answer. If they ask about substitutions, variations, or modifications, give specific suggestions.`;
 
         try {
-            const response = await axios.post(
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-                {
-                    contents: [{
-                        parts: [{ text: prompt }]
-                    }],
-                    generationConfig: {
-                        temperature: 0.7,
-                        maxOutputTokens: 1024,
-                    }
-                },
-                {
-                    headers: { 'Content-Type': 'application/json' }
+            const response = await ai.models.generateContent({
+                model: MODEL_NAME,
+                contents: prompt,
+                config: {
+                    temperature: 0.7,
+                    maxOutputTokens: 1024,
                 }
-            );
+            });
 
-            const textContent = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+            const textContent = response.text;
             return textContent || 'Unable to process your request.';
         } catch (error: any) {
-            if (error.response?.status === 429) {
+            // Handle rate limiting errors
+            if (error.message?.includes('429') || error.message?.includes('quota') || error.message?.includes('rate limit')) {
                 throw new Error('AI rate limit exceeded. Please try again later.');
             }
             throw new Error(`AI service error: ${error.message}`);
+        }
+    },
+
+    /**
+     * Checks if a specific item is considered "running low" based on quantity and household size.
+     */
+    async checkIfRunningLow(itemName: string, quantity: string, userCount: number): Promise<{ isRunningLow: boolean; reasoning: string }> {
+        const prompt = `
+You are a smart kitchen assistant. Determine if the following fridge item is running low for a household of ${userCount} people.
+
+Context:
+- Item Name: "${itemName}"
+- Current Quantity: "${quantity}"
+- Household Size: ${userCount} person(s)
+
+Task:
+- Analyze if this quantity is typically considered low/insufficient for this household size.
+- Respond with ONLY a JSON object.
+
+Format:
+{
+  "isRunningLow": true/false, // Boolean
+  "reasoning": "short explanation (max 15 words)"
+}
+`;
+
+        try {
+            const response = await ai.models.generateContent({
+                model: MODEL_NAME,
+                contents: prompt,
+                config: {
+                    temperature: 0.1,
+                    maxOutputTokens: 200,
+                    responseMimeType: "application/json"
+                }
+            });
+
+            const textContent = response.text;
+            if (!textContent) throw new Error('No response from AI');
+
+            const result = JSON.parse(textContent);
+            return {
+                isRunningLow: !!result.isRunningLow,
+                reasoning: result.reasoning || "AI assessment."
+            };
+        } catch (error: any) {
+            console.error('AI checkRunningLow error:', error);
+            // Default to false if AI fails
+            return { isRunningLow: false, reasoning: "Could not determine status." };
         }
     }
 };
@@ -186,8 +223,6 @@ function parseRecipeResponse(text: string): GeneratedRecipe[] {
         }
         
         cleanedText = cleanedText.trim();
-        
-        console.log('Attempting to parse:', cleanedText.substring(0, 200) + '...');
         
         const recipes = JSON.parse(cleanedText);
         

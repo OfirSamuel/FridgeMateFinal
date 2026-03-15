@@ -10,6 +10,7 @@ export interface IInventoryItem {
   name: string;
   quantity: string;
   ownership: ItemOwnership;
+  isRunningLow: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -44,6 +45,10 @@ const InventoryItemSchema = new Schema<IInventoryItem>(
       enum: ["SHARED", "PRIVATE"],
       required: true,
       default: "PRIVATE",
+    },
+    isRunningLow: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }

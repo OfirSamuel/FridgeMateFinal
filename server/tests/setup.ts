@@ -4,6 +4,10 @@ import dotenv from 'dotenv';
 import User, { IUser } from '../models/user.model';
 import bcrypt from "bcrypt";
 
+// Lazy load io and server to avoid early initialization
+let io: any;
+let server: any;
+
 dotenv.config();
 
 if (!process.env.JWT_SECRET || !process.env.JWT_REFRESH_SECRET || !process.env.JWT_EXPIRES_IN || !process.env.JWT_REFRESH_EXPIRES_IN) {
@@ -27,6 +31,11 @@ beforeAll(async () => {
     }
 
     try {
+        // Load app/server here so that mocks in test files are applied first
+        const appIndex = require('../index');
+        io = appIndex.io;
+        server = appIndex.server;
+
         await mongoose.connect(testUri);
         console.log('Connected to the test database');
     } catch (error) {
@@ -74,6 +83,14 @@ afterAll(async () => {
         for (const key in collections) {
             await collections[key].deleteMany({});
         }
+        
+        await new Promise<void>((resolve, reject) => {
+             io.close(() => resolve());
+        });
+        await new Promise<void>((resolve, reject) => {
+             server.close(() => resolve());
+        });
+
         await mongoose.connection.close();
         console.log('Disconnected from the test database');
     } catch (error) {
