@@ -3,6 +3,7 @@ import app from '../../index';
 import { token, userId } from '../setup';
 import { FridgeModel as Fridge } from '../../models/fridge.model';
 import InventoryItem from '../../models/inventory-item.model';
+import User from '../../models/user.model';
 import mongoose from 'mongoose';
 
 const testUserId = userId;
@@ -22,6 +23,9 @@ describe('Inventory Item Routes', () => {
             members: [{ userId: testUserId, joinedAt: new Date() }]
         });
         fridgeId = fridge._id.toString();
+
+        // Set the user's active fridge
+        await User.findByIdAndUpdate(testUserId, { activeFridgeId: fridge._id });
     });
 
     describe('POST /fridges/:fridgeId/items', () => {
@@ -199,6 +203,56 @@ describe('Inventory Item Routes', () => {
                 .set('Authorization', token);
 
             expect(res.statusCode).toBe(404);
+        });
+    });
+
+    describe('GET /fridges/me/items', () => {
+        beforeEach(async () => {
+            await InventoryItem.create([
+                {
+                    fridgeId,
+                    ownerId: testUserId,
+                    name: 'My Apple',
+                    quantity: '5 pcs',
+                    ownership: 'SHARED'
+                },
+                {
+                    fridgeId,
+                    ownerId: testUserId,
+                    name: 'My Banana',
+                    quantity: '1 bunch',
+                    ownership: 'PRIVATE'
+                }
+            ]);
+        });
+
+        it('should return all items from the user\'s fridge', async () => {
+            const res = await request(app)
+                .get('/fridges/me/items')
+                .set('Authorization', token);
+
+            expect(res.statusCode).toBe(200);
+            expect(res.body.items).toHaveLength(2);
+            const names = res.body.items.map((item: any) => item.name);
+            expect(names).toContain('My Apple');
+            expect(names).toContain('My Banana');
+        });
+
+        it('should filter items by ownership', async () => {
+            const res = await request(app)
+                .get('/fridges/me/items?ownership=SHARED')
+                .set('Authorization', token);
+
+            expect(res.statusCode).toBe(200);
+            expect(res.body.items).toHaveLength(1);
+            expect(res.body.items[0].name).toBe('My Apple');
+        });
+
+        it('should return 401 without authentication', async () => {
+            const res = await request(app)
+                .get('/fridges/me/items');
+
+            expect(res.statusCode).toBe(401);
         });
     });
 });

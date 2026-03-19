@@ -58,3 +58,14 @@ inventoryItemRoutes.delete(
   validate({ params: ItemParamsSchema }),
   asyncHandler(InventoryItemController.delete)
 );
+
+// Router for /fridges/me/items (user's fridge items)
+export const inventoryMeRoutes = Router();
+inventoryMeRoutes.use(requireAuth);
+
+// Get all items in user's fridge: GET /fridges/me/items
+inventoryMeRoutes.get(
+  "/",
+  validate({ query: InventoryItemQuerySchema }),
+  asyncHandler(InventoryItemController.getMyItems)
+);
