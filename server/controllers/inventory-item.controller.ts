@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { items as itemsRes, ok } from "../utils/apiResponse";
 import { parsePageLimit } from "../utils/pagination";
 import { InventoryItemService } from "../services/inventory-item.service";
+import { FridgesService } from "../services/fridges.service";
 
 type AuthedRequest = Request & { user: { userId: string } };
 
@@ -76,5 +77,31 @@ export class InventoryItemController {
 
     const result = await InventoryItemService.delete(itemId, userId);
     return ok(res, result);
+  }
+
+  /**
+   * Get all items in the user's fridge
+   * GET /fridges/me/items
+   */
+  static async getMyItems(req: Request, res: Response) {
+    const userId = (req as AuthedRequest).user.userId;
+    const { page, limit, skip } = parsePageLimit(req.query);
+
+    const fridge = await FridgesService.getMyFridge(userId);
+    const fridgeId = fridge._id.toString();
+
+    const result = await InventoryItemService.getAll(
+      fridgeId,
+      userId,
+      req.query as any,
+      { skip, limit }
+    );
+
+    return itemsRes(res, {
+      items: result.items,
+      total: result.total,
+      page,
+      limit,
+    });
   }
 }
